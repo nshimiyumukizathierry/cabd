@@ -1,9 +1,5 @@
-/* Tailwind core directives must come before any @layer rules */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Optional custom-variant at-rule (keep if you use a plugin that provides it) */
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -116,52 +112,13 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Base layer: Tailwind's @apply must be used inside @layer base/component */
 @layer base {
-  /* apply shared border / outline styles using Tailwind utility classes */
   * {
     @apply border-border outline-ring/50;
   }
-
-  html, body, #__next {
-    height: 100%;
-  }
-
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    margin: 0;
-  }
-
-  /* accessible focus-visible fallback for browsers that don't support :focus-visible */
-  .focus-visible\:ring-2:focus-visible {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    box-shadow: 0 0 0 2px var(--ring);
-  }
-
-  /* Text truncation utility classes (kept here so Tailwind can pick them up) */
-  .line-clamp-1 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-  }
-
-  .line-clamp-2 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .line-clamp-3 {
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
   }
 }
 
@@ -183,7 +140,7 @@
   background: #a8a8a8;
 }
 
-/* Loading shimmer animation */
+/* Loading animations */
 @keyframes shimmer {
   0% {
     background-position: -200px 0;
@@ -199,7 +156,36 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Keep transition rules global (not using @apply so outside @layer is fine) */
+/* Text truncation utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Focus styles */
+.focus-visible\:ring-2:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* Smooth transitions */
 * {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow,
     transform, filter, backdrop-filter;

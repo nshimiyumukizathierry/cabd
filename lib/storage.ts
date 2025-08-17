@@ -129,7 +129,7 @@ export class StorageService {
   getImageUrl(imagePath: string): string {
     if (!imagePath) {
       console.warn("No image path provided")
-      return "/placeholder.svg?height=300&width=300&text=No+Image"
+      return "/classic-red-convertible.png"
     }
 
     // Handle both full paths and just filenames
@@ -140,7 +140,7 @@ export class StorageService {
     const { data } = supabase.storage.from(this.bucketName).getPublicUrl(cleanPath)
 
     const publicUrl = data.publicUrl
-    console.log(`Generated S3 public URL: ${publicUrl}`)
+    console.log(`Generated public URL for ${imagePath}: ${publicUrl}`)
 
     return publicUrl
   }

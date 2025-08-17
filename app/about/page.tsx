@@ -1,31 +1,56 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Mail, Phone, User, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Mail, Phone, MapPin, Users, Target, Award } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { storageService } from "@/lib/storage"
-import Image from "next/image"
+import type { Database } from "@/lib/supabase"
 
-interface Founder {
-  id: string
-  name: string
-  position: string
-  bio: string
-  email: string
-  phone: string
-  image_path: string
-  display_order: number
-  created_at: string
-}
+type Founder = Database["public"]["Tables"]["founders"]["Row"]
+
+// Demo founders data
+const DEMO_FOUNDERS: Founder[] = [
+  {
+    id: "founder-1",
+    name: "John Smith",
+    position: "CEO & Founder",
+    bio: "Visionary leader with 15+ years in automotive industry. Passionate about revolutionizing car buying experience through technology and exceptional customer service.",
+    email: "john@carbd.com",
+    phone: "+1 (555) 123-4567",
+    image_path: "founder-1.jpg",
+    display_order: 1,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "founder-2",
+    name: "Sarah Johnson",
+    position: "CTO & Co-Founder",
+    bio: "Technology expert with deep expertise in e-commerce platforms and automotive systems. Leads our technical innovation and platform development.",
+    email: "sarah@carbd.com",
+    phone: "+1 (555) 123-4568",
+    image_path: "founder-2.jpg",
+    display_order: 2,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "founder-3",
+    name: "Michael Chen",
+    position: "Head of Operations",
+    bio: "Operations specialist with extensive experience in automotive logistics and supply chain management. Ensures smooth operations and customer satisfaction.",
+    email: "michael@carbd.com",
+    phone: "+1 (555) 123-4569",
+    image_path: "founder-3.jpg",
+    display_order: 3,
+    created_at: new Date().toISOString(),
+  },
+]
 
 export default function AboutPage() {
   const [founders, setFounders] = useState<Founder[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     fetchFounders()
@@ -33,228 +58,204 @@ export default function AboutPage() {
 
   const fetchFounders = async () => {
     try {
-      console.log("Fetching founders from database...")
-      setLoading(true)
-      setError(null)
+      console.log("Fetching founders...")
 
-      const { data, error: fetchError } = await supabase
-        .from("founders")
-        .select("*")
-        .order("display_order", { ascending: true })
+      const { data, error } = await supabase.from("founders").select("*").order("display_order", { ascending: true })
 
-      if (fetchError) {
-        console.error("Error fetching founders:", fetchError)
-        throw new Error(`Failed to fetch founders: ${fetchError.message}`)
+      if (error) {
+        console.error("Error fetching founders:", error)
+        // Fall back to demo data
+        setFounders(DEMO_FOUNDERS)
+        setLoading(false)
+        return
       }
 
-      console.log("Fetched founders:", data?.length || 0)
-      console.log("Founders data:", data)
+      console.log("Founders fetched:", data?.length || 0)
 
-      setFounders(data || [])
-    } catch (err: any) {
-      console.error("Error in fetchFounders:", err)
-      setError(err.message)
+      // If no data from database, show demo founders
+      if (!data || data.length === 0) {
+        console.log("No founders in database, showing demo founders")
+        setFounders(DEMO_FOUNDERS)
+      } else {
+        setFounders(data)
+      }
+    } catch (error: any) {
+      console.error("Error fetching founders:", error)
+      // Always fall back to demo founders on error
+      setFounders(DEMO_FOUNDERS)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    await fetchFounders()
-    setRefreshing(false)
-  }
-
-  const getFounderImageUrl = (imagePath: string, founderName: string) => {
-    if (!imagePath || imagePath.trim() === "") {
-      console.log(`No image path for ${founderName}, using placeholder`)
-      return `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(founderName.charAt(0))}`
+  const getFounderImageUrl = (imagePath: string | null) => {
+    if (!imagePath) {
+      return "/placeholder-user.jpg"
     }
-
-    try {
-      const imageUrl = storageService.getImageUrl(imagePath)
-      console.log(`Generated image URL for ${founderName}:`, imageUrl)
-      return imageUrl
-    } catch (error) {
-      console.error(`Error generating image URL for ${founderName}:`, error)
-      return `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(founderName.charAt(0))}`
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading founders...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-              <h3 className="text-red-800 font-medium mb-2">Error Loading Founders</h3>
-              <p className="text-red-600 text-sm mb-4">{error}</p>
-              <Button onClick={handleRefresh} disabled={refreshing} className="bg-red-600 hover:bg-red-700">
-                {refreshing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Retrying...
-                  </>
-                ) : (
-                  "Try Again"
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return storageService.getImageUrl(imagePath)
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">About CarBD</h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Revolutionizing the automotive industry in Bangladesh with innovative solutions and exceptional service.
-          </p>
+      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">About CarBD</h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+              Revolutionizing the car buying experience with cutting-edge technology and exceptional customer service
+            </p>
+            <div className="flex flex-wrap justify-center gap-8 text-center">
+              <div className="flex items-center gap-2">
+                <Users className="h-6 w-6" />
+                <span className="text-lg">10,000+ Happy Customers</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Target className="h-6 w-6" />
+                <span className="text-lg">500+ Cars Sold</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Award className="h-6 w-6" />
+                <span className="text-lg">5 Years Experience</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Mission Section */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">Our Mission</h2>
-            <p className="text-lg text-gray-700 leading-relaxed mb-8">
-              At CarBD, we're committed to transforming how people buy, sell, and experience automobiles in Bangladesh.
-              Our platform connects buyers with quality vehicles while providing sellers with the tools they need to
-              reach the right customers.
-            </p>
-            <div className="grid md:grid-cols-3 gap-8 mt-12">
-              <div className="text-center">
-                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🚗</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Quality Vehicles</h3>
-                <p className="text-gray-600">Curated selection of reliable and well-maintained vehicles</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
+              <p className="text-lg text-gray-600 mb-6">
+                At CarBD, we believe that buying a car should be an exciting and transparent experience. Our mission is
+                to revolutionize the automotive industry by providing a seamless, trustworthy, and customer-centric
+                platform that connects buyers with their perfect vehicles.
+              </p>
+              <p className="text-lg text-gray-600 mb-6">
+                We leverage cutting-edge technology, comprehensive vehicle information, and exceptional customer service
+                to ensure every customer finds exactly what they're looking for at the best possible price.
+              </p>
+              <div className="flex items-center gap-4">
+                <MapPin className="h-5 w-5 text-blue-600" />
+                <span className="text-gray-600">Serving customers nationwide with local expertise</span>
               </div>
-              <div className="text-center">
-                <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🤝</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Trusted Service</h3>
-                <p className="text-gray-600">Transparent processes and exceptional customer support</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">💡</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Innovation</h3>
-                <p className="text-gray-600">Cutting-edge technology to enhance your car buying experience</p>
-              </div>
+            </div>
+            <div className="relative">
+              <Image
+                src="/placeholder.jpg"
+                alt="CarBD Mission"
+                width={600}
+                height={400}
+                className="rounded-lg shadow-lg"
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Founders Section */}
+      {/* Values Section */}
       <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Meet Our Founders</h2>
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-                {refreshing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              </Button>
-            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Values</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              The visionary leaders driving CarBD's mission to revolutionize the automotive industry in Bangladesh.
+              These core values guide everything we do and shape our commitment to excellence
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer First</h3>
+              <p className="text-gray-600">
+                Every decision we make is centered around providing the best possible experience for our customers
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Target className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Transparency</h3>
+              <p className="text-gray-600">
+                We believe in complete honesty and transparency in all our dealings and vehicle information
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Award className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Excellence</h3>
+              <p className="text-gray-600">
+                We strive for excellence in every aspect of our service, from technology to customer support
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Our experienced team is dedicated to revolutionizing the car buying experience
             </p>
           </div>
 
-          {founders.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="bg-gray-100 rounded-lg p-8 max-w-md mx-auto">
-                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Founders Added Yet</h3>
-                <p className="text-gray-600 mb-4">
-                  Founder profiles will appear here once they are added by the admin.
-                </p>
-                <Button onClick={handleRefresh} disabled={refreshing}>
-                  {refreshing ? "Checking..." : "Check Again"}
-                </Button>
-              </div>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-96"></div>
+              ))}
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {founders.map((founder) => (
                 <Card key={founder.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-square relative bg-gray-100">
-                    <Image
-                      src={getFounderImageUrl(founder.image_path, founder.name) || "/placeholder.svg"}
-                      alt={founder.name}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        console.error(`Image load error for ${founder.name}:`, founder.image_path)
-                        const target = e.target as HTMLImageElement
-                        target.src = `/placeholder.svg?height=300&width=300&text=${encodeURIComponent(founder.name.charAt(0))}`
-                      }}
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="text-center mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">{founder.name}</h3>
-                      <Badge variant="secondary" className="mb-3">
-                        {founder.position}
-                      </Badge>
+                  <CardContent className="p-0">
+                    <div className="relative aspect-square">
+                      <Image
+                        src={getFounderImageUrl(founder.image_path) || "/placeholder-user.jpg"}
+                        alt={founder.name}
+                        fill
+                        className="object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = "/placeholder-user.jpg"
+                        }}
+                      />
                     </div>
-
-                    {founder.bio && (
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">{founder.bio}</p>
-                    )}
-
-                    <div className="space-y-2">
-                      {founder.email && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                          <a href={`mailto:${founder.email}`} className="hover:text-blue-600 transition-colors">
-                            {founder.email}
-                          </a>
-                        </div>
-                      )}
-                      {founder.phone && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                          <a href={`tel:${founder.phone}`} className="hover:text-blue-600 transition-colors">
-                            {founder.phone}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Debug info for development */}
-                    {process.env.NODE_ENV === "development" && (
-                      <div className="mt-4 p-2 bg-gray-50 rounded text-xs">
-                        <p>
-                          <strong>Image Path:</strong> {founder.image_path || "None"}
-                        </p>
-                        <p>
-                          <strong>ID:</strong> {founder.id}
-                        </p>
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-semibold text-gray-900">{founder.name}</h3>
+                        <Badge variant="secondary">{founder.display_order}</Badge>
                       </div>
-                    )}
+                      <p className="text-blue-600 font-medium mb-3">{founder.position}</p>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">{founder.bio}</p>
+                      <div className="space-y-2">
+                        {founder.email && (
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Mail className="h-4 w-4" />
+                            <a href={`mailto:${founder.email}`} className="hover:text-blue-600">
+                              {founder.email}
+                            </a>
+                          </div>
+                        )}
+                        {founder.phone && (
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Phone className="h-4 w-4" />
+                            <a href={`tel:${founder.phone}`} className="hover:text-blue-600">
+                              {founder.phone}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -263,29 +264,26 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Company Stats */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Our Impact</h2>
-          </div>
-          <div className="grid md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">1000+</div>
-              <div className="text-gray-600">Happy Customers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">500+</div>
-              <div className="text-gray-600">Cars Sold</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">50+</div>
-              <div className="text-gray-600">Partner Dealers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-orange-600 mb-2">24/7</div>
-              <div className="text-gray-600">Customer Support</div>
-            </div>
+      {/* Contact Section */}
+      <section className="py-16 bg-blue-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Find Your Perfect Car?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Join thousands of satisfied customers who have found their dream cars with CarBD
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/cars"
+              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Browse Cars
+            </a>
+            <a
+              href="/contact"
+              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+            >
+              Contact Us
+            </a>
           </div>
         </div>
       </section>

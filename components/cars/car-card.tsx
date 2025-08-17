@@ -54,6 +54,8 @@ export function CarCard({ car }: CarCardProps) {
     if (imageError || !car.image_url) {
       return "/classic-red-convertible.png"
     }
+
+    // Use storage service to get the proper URL from cars bucket
     return storageService.getImageUrl(car.image_url)
   }
 
@@ -143,8 +145,12 @@ export function CarCard({ car }: CarCardProps) {
             className={`object-cover transition-all duration-300 group-hover:scale-105 ${
               imageLoaded ? "opacity-100" : "opacity-0"
             }`}
-            onError={() => setImageError(true)}
+            onError={() => {
+              console.error(`Image load error for car ${car.id}:`, car.image_url)
+              setImageError(true)
+            }}
             onLoad={() => setImageLoaded(true)}
+            priority
           />
         </div>
 

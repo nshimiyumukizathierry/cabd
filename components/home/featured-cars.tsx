@@ -18,7 +18,7 @@ export function FeaturedCars() {
 
   const fetchFeaturedCars = async () => {
     try {
-      console.log("Fetching featured cars...")
+      console.log("Fetching featured cars from Supabase...")
 
       const { data, error } = await supabase
         .from("cars")
@@ -29,24 +29,15 @@ export function FeaturedCars() {
 
       if (error) {
         console.error("Supabase error:", error)
-        throw error
+        toast.error(`Failed to load cars: ${error.message}`)
+        return
       }
 
-      console.log("Featured cars fetched:", data?.length || 0)
+      console.log("Featured cars fetched successfully:", data?.length || 0)
       setCars(data || [])
     } catch (error: any) {
       console.error("Error fetching featured cars:", error)
-
-      // More specific error handling
-      if (error.message?.includes("Invalid API key")) {
-        toast.error("Database connection error. API keys may need updating.")
-      } else if (error.message?.includes('relation "cars" does not exist')) {
-        toast.error("Database tables not found. Please run the setup scripts.")
-      } else if (error.message?.includes("JWT")) {
-        toast.error("Authentication error. Please check API keys.")
-      } else {
-        toast.error(`Failed to load featured cars: ${error.message}`)
-      }
+      toast.error(`Failed to load featured cars: ${error.message}`)
     } finally {
       setLoading(false)
     }
@@ -74,7 +65,7 @@ export function FeaturedCars() {
         {cars.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-lg text-gray-600 mb-4">No cars available at the moment.</p>
-            <p className="text-sm text-gray-500">Please check back later or contact an administrator.</p>
+            <p className="text-sm text-gray-500">Please run the database setup scripts to add sample cars.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
