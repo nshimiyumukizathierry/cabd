@@ -171,7 +171,7 @@ export default function SystemPage() {
         {status.toUpperCase()}
       </Badge>
     )
-  }
+  
 
   return (
     <div className="container mx-auto py-8 space-y-6">
