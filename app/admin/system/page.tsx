@@ -171,8 +171,7 @@ export default function SystemPage() {
         {status.toUpperCase()}
       </Badge>
     )
-  
-
+export default function Page() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -181,13 +180,20 @@ export default function SystemPage() {
             <Activity className="h-8 w-8" />
             System Health
           </h1>
-          <p className="text-muted-foreground">Monitor your CarBD platform status and performance</p>
+          <p className="text-muted-foreground">
+            Monitor your CarBD platform status and performance
+          </p>
         </div>
         <Button onClick={refreshStatus} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
+    </div>   
+  )
+}
 
       {/* Overall Health Score */}
       <Card>
