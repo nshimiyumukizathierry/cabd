@@ -191,5 +191,5 @@ CREATE TRIGGER create_profile_on_signup
 This architecture ensures **data integrity**, **performance**, and **security** while supporting all CarBD platform features.
 \`\`\`
 
-```text file="EER_DIAGRAM_ASCII.txt"
+\`\`\`text file="EER_DIAGRAM_ASCII.txt"
 # CarBD Platform - ASCII EER Diagram
