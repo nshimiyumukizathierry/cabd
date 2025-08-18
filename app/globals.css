@@ -1,7 +1,8 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@custom-variant dark (&:is(.dark *));
-
+/* Custom Theme Variables */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -73,6 +74,7 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* If you are using a theme inline system, keep this. Otherwise, you may remove it. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -126,16 +128,13 @@
 ::-webkit-scrollbar {
   width: 8px;
 }
-
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
@@ -149,7 +148,6 @@
     background-position: calc(200px + 100%) 0;
   }
 }
-
 .shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200px 100%;
@@ -163,14 +161,12 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
 }
-
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-
 .line-clamp-3 {
   overflow: hidden;
   display: -webkit-box;
@@ -192,3 +188,5 @@
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+/* Optional: Remove @custom-variant if not used in your system. */
